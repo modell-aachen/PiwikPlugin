@@ -1,0 +1,5 @@
+data/System/PiwikPlugin.txt 0644
+lib/Foswiki/Plugins/PiwikPlugin/Config.spec 0644
+lib/Foswiki/Plugins/PiwikPlugin.pm 0644
+lib/Foswiki/Plugins/PiwikPlugin/Tracker.pm 0644
+pub/System/PiwikPlugin/logo.png 0644

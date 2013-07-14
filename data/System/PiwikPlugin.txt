@@ -1,0 +1,63 @@
+%META:TOPICINFO{author="micha" comment="reprev" date="1373824365" format="1.1" reprev="2" version="2"}%
+---+!! %TOPIC%
+%SHORTDESCRIPTION%
+
+%TOC%
+
+<img src="%ATTACHURLPATH%/logo.png" align="right" />
+
+This plugin lets you track page view using the [[http://piwik.org][Piwik web analytics]] services.
+
+Piwik is the leading self-Hosted, decentralized, Open Source web Analytics
+Platform, used by 460,000 websites in 150 countries. 
+
+In most cases the !JavaScript API is used on the _client side_ to bring Piwik-based web analytics to your site. However browsers tend to
+block these additional third party cookies and services which then results in rather sparse data being collected.
+
+Alternatively <nop>%TOPIC% uses the REST api of Piwik to track page views on the _server side_. That is, your Foswiki server talks
+to a Piwik server informing it about things going on behind the scene. 
+
+There are a couple of advantages and disadvantages comparing client side vs server side page tracking:
+
+   * measurements on the server are more reliable as they don't rely on the client to cooperate with regards to <nop>JavaScript and cookie settings
+   * installing a Foswiki plugin is more standardized compared to injecting additional <nop>JavaScript to your site
+   * page rendering times are captured on the server and propagated to te Piwik analyzer
+   * custom site search tools like [[Foswiki:Extensions/SolrPlugin][SolrPlugin]] can hook into the tracking process on the server in a reliable way
+   * the Piwik API doesn't have to be exposed to the outside which would normally be the case for the browser to be able to contact it
+   * some measures like screen size and browser plugins can't be recorded on the server 
+   * click overlays don't work without piwik-related <nop>JavaScript being added to the site
+
+In short: the bulk of interesting data can be captured server side in a more reliable way while some minor features of Piwik aren't covered yet by data produced by <nop>%TOPIC%.
+
+---++ Installation Instructions
+
+%$INSTALL_INSTRUCTIONS%
+
+To finish installation, you'll have to configure at least:
+
+   * the ={ApiUrl}= of your Piwik server, e.g. =http://localhost/piwik/piwik.pgp=
+   * the ={SiteId}= of your Foswiki server; this is a numeric id of your sites configured in piwik itself
+
+Note that you must use different =<nop>SiteIds= in each =VirtualHost.cfg= file in case you are using [[Foswiki:Extensions/VirtualHostingContrib]], e.g.
+
+<verbatim>
+$VirtualHost{PiwikPlugin}{SiteId} = 1;
+</verbatim>
+
+---++ Info
+<!--
+   * Set SHORTDESCRIPTION = %$SHORTDESCRIPTION%
+-->
+
+|  Author(s): | Michael Daum|
+|  Copyright: | &copy; 2013 Michael Daum http://michaeldaumconsulting.com |
+|  License: | [[http://www.gnu.org/licenses/gpl.html][GPL (Gnu General Public License)]] |
+|  Release: | %$RELEASE% |
+|  Version: | %$VERSION% |
+|  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  14 Jul 2013 | initial release |
+|  Dependencies: | %$DEPENDENCIES% |
+|  Home page: | Foswiki:Extensions/%TOPIC% |
+|  Support: | Foswiki:Support/%TOPIC% |
+
+%META:FILEATTACHMENT{name="logo.png" attachment="logo.png" attr="h" comment="" date="1373824358" size="7191" user="micha" version="1"}%
