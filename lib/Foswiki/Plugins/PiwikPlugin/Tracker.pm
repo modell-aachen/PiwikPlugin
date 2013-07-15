@@ -79,8 +79,11 @@ sub init {
   if ($Foswiki::cfg{PiwikPlugin}{TokenAuth}) {
     $this->{params}{token_auth} = $Foswiki::cfg{PiwikPlugin}{TokenAuth};
     $this->{params}{cip} = $this->{currentVisitor}{remoteAddr};
-    $this->{params}{cdt} = urlEncode(Foswiki::Time::formatTime(time(), '$year-$mo-$day $hours:$minutes:$seconds'));
+    #$this->{params}{cdt} = Foswiki::Time::formatTime(time(), '$year-$mo-$day $hours:$minutes:$seconds');# SMELL: does it need to be ... $day, $hours...?
+    #$this->{params}{cdt} = time();
+    #print STDERR "cdt=$this->{params}{cdt}\n";
   }
+
  
   $this->saveVisitorState;
 
