@@ -21,8 +21,8 @@ use warnings;
 use Foswiki::Func ();
 use Error qw(:try);
 
-use version; our $VERSION = version->declare("v1.0.0");
-our $RELEASE = '14 Jul 2013';
+use version; our $VERSION = version->declare("v1.99.0_001");
+our $RELEASE = '15 Jul 2013';
 our $SHORTDESCRIPTION = 'Server-side page tracking using Piwik';
 our $NO_PREFS_IN_TOPIC = 1;
 our $tracker;
@@ -51,8 +51,6 @@ sub initPlugin {
 
 sub finishPlugin {
 
-  return unless tracker->isEnabled && $action eq 'view';
-
   try {
     # set all custom variables
     if ($Foswiki::cfg{PiwikPlugin}{CustomVariable}) {
@@ -70,7 +68,7 @@ sub finishPlugin {
 
   } catch Error::Simple with {
     # report but ignore
-    print STDERR "PiwikiPlugin::Tracker - ".shift."\n";
+    print STDERR "PiwikPlugin::Tracker - ".shift."\n";
   };
 }
 

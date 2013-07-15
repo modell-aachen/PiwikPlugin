@@ -37,12 +37,25 @@ To finish installation, you'll have to configure at least:
 
    * the ={ApiUrl}= of your Piwik server, e.g. =http://localhost/piwik/piwik.pgp=
    * the ={SiteId}= of your Foswiki server; this is a numeric id of your sites configured in piwik itself
+   * the ={QueueDir}= to spool tracked page views while being recorded by Foswiki
 
 Note that you must use different =<nop>SiteIds= in each =VirtualHost.cfg= file in case you are using [[Foswiki:Extensions/VirtualHostingContrib]], e.g.
 
 <verbatim>
 $VirtualHost{PiwikPlugin}{SiteId} = 1;
 </verbatim>
+
+Page impressions aren't recored to the Piwik server directly for performance reasons. Instead, they are spooled in a queue specified by the ={QueueDir}= 
+configuration setting. Foswiki itself will write to that directory while the interim =piwik_daemon= has to be started which takes over responsibility forwarding
+the records to the actual Piwik server.
+
+Start the =piwik_daemon= with
+
+<verbatim>
+cd <foswik-dir>/tools; ./piwik_daemon >>/var/log/piwik.log 2>&1 &
+</verbatim>
+
+TODO: Let's start this automatically.
 
 ---++ Info
 <!--

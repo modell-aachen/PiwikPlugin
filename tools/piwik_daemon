@@ -1,0 +1,24 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+
+BEGIN {
+  if (-e './setlib.cfg') {
+    unshift @INC, '.';
+  } elsif (-e '../bin/setlib.cfg') {
+    unshift @INC, '../bin';
+  }    # otherwise rely on the user-set path
+  require 'setlib.cfg';
+  require 'LocalSite.cfg';
+}
+
+use Foswiki::Plugins::PiwikPlugin::Daemon ();
+
+my $server = new Foswiki::Plugins::PiwikPlugin::Daemon(
+  debug => $Foswiki::cfg{PiwikPlugin}{Debug},
+  apiUrl => $Foswiki::cfg{PiwikPlugin}{ApiUrl},
+  queueDir => $Foswiki::cfg{PiwikPlugin}{QueueDir},
+);
+
+$server->run();

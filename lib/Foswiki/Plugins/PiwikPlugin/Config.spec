@@ -25,9 +25,21 @@ $Foswiki::cfg{PiwikPlugin}{CustomVariable} = [
   {
     id => 1,
     scope => "visit",
-    name => "Language",
-    value => "%LANGUAGE%"
+    name => "WikiName",
+    value => "%WIKINAME%"
+  },  
+  {
+    id => 2,
+    scope => "page",
+    name => "action",
+    value => "%SCRIPTNAME%"
   },  
 ];
+
+# **PATH**
+# Directory which is used to communicated recorded page views to the piwik record.  
+# Note that this must be a real directory without using variables as it is used by the piwik_daemon as well.
+# This can be directory shared among all virtual hosts when using VirtualHostingContrib.
+$Foswiki::cfg{PiwikPlugin}{QueueDir} = '/tmp/PiwikPlugin/queue';
 
 1;

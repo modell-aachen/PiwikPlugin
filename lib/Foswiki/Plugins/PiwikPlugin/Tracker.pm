@@ -20,45 +20,36 @@ use warnings;
 
 use Foswiki::Func ();
 use Foswiki::Plugins ();
-use Error qw(:try);
-use LWP::UserAgent ();
-use URI ();
 use Digest::MD5();
 use JSON();
+use File::Temp ();
+use File::Path qw(make_path);
 
 use constant DRY => 0; # toggle me
+use constant PROFILE => 1; # toggle me
 
 ################################################################################
 sub new {
   my $class = shift;
 
   my $this = bless({
-    apiUrl => $Foswiki::cfg{PiwikPlugin}{ApiUrl},
-    userAgent => LWP::UserAgent->new(
-      agent => "Foswiki Piwik Client",
-      timeout => 2, # make it short
-    ),
-    gotErrors => 0,
+    queueDir => $Foswiki::cfg{PiwikPlugin}{QueueDir},
     @_
   }, $class);
 
+  unless (-d $this->{queueDir}) {
+    writeDebug("creating queueDir $this->{queueDir}");
+    make_path($this->{queueDir}) || die "Can't create queueDir '$this->{queueDir}'";
+  }
+
   return $this;
-}
-
-################################################################################
-sub isEnabled {
-  my $this = shift;
-
-  return $this->{gotErrors}?0:1;
 }
 
 ################################################################################
 sub init {
   my $this = shift;
 
-  return unless $this->isEnabled;
-
-  $this->_readVisitorState;
+  $this->readVisitorState;
 
   my $request = Foswiki::Func::getRequestObject;
   my ($hour, $min, $sec) = Foswiki::Time::formatTime(time(), '$hours:$minutes:$seconds') =~ /^(.*):(.*):(.*)$/;
@@ -90,7 +81,7 @@ sub init {
     $this->{params}{cip} = $this->{currentVisitor}{remoteAddr};
   };
  
-  $this->_saveVisitorState;
+  $this->saveVisitorState;
 
   return $this;
 }
@@ -104,115 +95,65 @@ sub doTrackPageView {
   $web ||= $session->{webName};
   $topic ||= $session->{topicName};
 
-  _writeDebug("doTrackPageView($web, $topic)");
+  writeDebug("doTrackPageView($web, $topic)");
 
-  my $webTitle = _getTopicTitle($web, $Foswiki::cfg{HomeTopicName});
+  my $webTitle = getTopicTitle($web, $Foswiki::cfg{HomeTopicName});
   $webTitle = $web if $webTitle eq $Foswiki::cfg{HomeTopicName};
-
-  my $topicTitle = $topic eq $Foswiki::cfg{HomeTopicName} ? $topic : _getTopicTitle($web, $topic);
-
+  my $topicTitle = $topic eq $Foswiki::cfg{HomeTopicName} ? $topic : getTopicTitle($web, $topic);
   my $pageTitle = $webTitle . '/' . $topicTitle;
 
-  my $response = $this->sendRequest($this->getUrlTrackPageView($pageTitle));
-
-  _writeDebug("status=".$response->status_line) if ref($response);
-
-  if (ref($response) && $response->is_error) {
-    $this->{gotErrors} = 1;
-    throw Error::Simple("Error talking to Piwik server, deactivating: ".$response->status_line);
-  };
-
-  return $response;
+  return $this->queueRecord($this->createPageViewRecord($pageTitle));
 }
 
 ################################################################################
 sub doTrackSiteSearch {
   my ($this, $keyword, $category, $countResults) = @_;
 
-  _writeDebug("doTrackSiteSearch(".($keyword||'').", ".($category||'').", ".($countResults||'').")");
+  writeDebug("doTrackSiteSearch(".($keyword||'').", ".($category||'').", ".($countResults||'').")");
         
-  my $response = $this->sendRequest($this->getUrlTrackSiteSearch($keyword, $category, $countResults));
-
-  _writeDebug("status=".$response->status_line) if ref($response);
-
-  if (ref($response) && $response->is_error) {
-    $this->{gotErrors} = 1;
-    throw Error::Simple("Error talking to Piwik server, deactivating: ".$response->status_line);
-  };
-
-  return $response;
+  return $this->queueRecord($this->createSiteSearchRecord($keyword, $category, $countResults));
 }
 
 ################################################################################
-sub getUrlTrackSiteSearch {
+sub createSiteSearchRecord {
   my ($this, $keyword, $category, $countResults) = @_;
 
-  my %params = ();
-  $params{search} = $keyword if defined $keyword;
-  $params{search_cat} = $category if defined $category;
-  $params{search_count} = $countResults if defined $countResults;
+  my $record = $this->createTrackerRecord;
+  $record->{search} = $keyword if defined $keyword;
+  $record->{search_cat} = $category if defined $category;
+  $record->{search_count} = $countResults if defined $countResults;
 
-  return $this->getUrl(%params);
+  return $record;
 }
 
 ################################################################################
-sub getUrlTrackPageView {
+sub createPageViewRecord {
   my ($this, $pageTitle) = @_;
 
-  my %params = ();
-  $params{action_name} = $pageTitle if defined $pageTitle;
+  my $record = $this->createTrackerRecord;
+  $record->{action_name} = $pageTitle if defined $pageTitle;
 
-  _writeDebug("pageTitle=".($pageTitle||''));
-
-  return $this->getUrl(%params);
+  return $record;
 }
 
 ################################################################################
-sub getUrl {
+sub createTrackerRecord {
   my $this = shift;
 
-  my $apiUrl = $this->{apiUrl};
-  throw Error::Simple("apiUrl not defined") unless defined $apiUrl;
-
-  throw Error::Simple("{SiteId} not defined please look up your configuration")
-    unless defined $this->{params}{idsite};
-
+  my %record = %{$this->{params}};
+  
   if (defined $this->{customVariables}{visit}) {
-    $this->{params}{_cvar} = JSON::encode_json($this->{customVariables}{visit});
+    $record{_cvar} = JSON::encode_json($this->{customVariables}{visit});
   }
 
   if (defined $this->{customVariables}{page}) {
-    $this->{params}{cvar} = JSON::encode_json($this->{customVariables}{page});
+    $record{cvar} = JSON::encode_json($this->{customVariables}{page});
   }
 
   my $request = Foswiki::Func::getRequestObject;
-  $this->{params}{gt_ms} = int($request->getTime()*1000),
+  $record{gt_ms} = int($request->getTime()*1000),
 
-  my $uri = new URI($apiUrl);
-  my %queryParams = ($uri->query_form, 
-    %{$this->{params}},
-    @_,
-  );
-
-  if ($Foswiki::cfg{PiwikPlugin}{Debug}) {
-    foreach my $key (sort keys %queryParams) {
-      _writeDebug("PARAMS: $key=$queryParams{$key}");
-    }
-  }
-
-  $uri->query_form(%queryParams);
-
-  return $uri;
-}
-
-################################################################################
-sub sendRequest {
-  my ($this, $uri) = @_;
-
-  #_writeDebug("sendRequest ".$uri);
-
-  return if DRY;
-  return $this->{userAgent}->get($uri);
+  return \%record;
 }
 
 ################################################################################
@@ -229,12 +170,12 @@ sub setCustomVariable {
 
   $scope = 'visit' unless defined $scope;
 
-  _writeDebug("setCustomVariable($id, $name, $value, $scope)");
+  writeDebug("setCustomVariable($id, $name, $value, $scope)");
 
-  throw Error::Simple("Parameter id to setCustomVariable should be an integer")
+  die "Parameter id to setCustomVariable should be an integer"
     unless defined $id && $id =~ /^\d+$/;
 
-  throw Error::Simple("Invalid scope '".($scope||"")."'")
+  die "Invalid scope '".($scope||"")."'"
     unless defined($scope) && $scope =~ /^(visit|page)$/;
 
   $this->{customVariables}{$scope}{$id} = [$name, $value];
@@ -252,10 +193,10 @@ sub getCustomVariable {
 
   $scope = 'visit' unless defined $scope;
 
-  throw Error::Simple("Parameter id to getCustomVariable should be an integer")
+  die "Parameter id to getCustomVariable should be an integer"
     unless defined $id && $id =~ /^\d+$/;
 
-  throw Error::Simple("Invalid scope '".($scope||"")."'")
+  die "Invalid scope '".($scope||"")."'"
     unless defined($scope) && $scope =~ /^(visit|page)$/;
 
   my $entry = $this->{customVariables}{$scope}{$id};
@@ -266,20 +207,23 @@ sub getCustomVariable {
 
 
 ################################################################################
-sub _getVisitorFileName {
+sub getVisitorFileName {
   my $wikiName = shift;
 
-  return Foswiki::Func::getWorkArea("PiwikPlugin") . '/' . _getVisitorId($wikiName) . '.txt';
+  my $visitorsDir = Foswiki::Func::getWorkArea("PiwikPlugin") . '/visitors';
+  mkdir $visitorsDir unless -d $visitorsDir;
+
+  return $visitorsDir . '/' . getVisitorId($wikiName) . '.txt';
 }
 
 ################################################################################
-sub _readVisitorState {
+sub readVisitorState {
   my ($this, $user) = @_;
 
   my $wikiName = Foswiki::Func::getWikiName($user);
-  my $file = _getVisitorFileName($wikiName);
+  my $file = getVisitorFileName($wikiName);
 
-  #_writeDebug("file=$file");
+  #writeDebug("file=$file");
 
   my %record = ();
   if (-f $file) {
@@ -297,7 +241,7 @@ sub _readVisitorState {
   $record{user} = $user || 'guest' unless defined $record{user};
   $record{wikiName} = $wikiName unless defined $record{wikiName};
   $record{remoteAddr} = $request->remoteAddress();
-  $record{id} = _getVisitorId($wikiName);
+  $record{id} = getVisitorId($wikiName);
   $record{count}++;
   $record{firstVisit} = time unless defined $record{firstVisit};
 
@@ -307,7 +251,7 @@ sub _readVisitorState {
 }
 
 ################################################################################
-sub _getVisitorId {
+sub getVisitorId {
   my $wikiName = shift;
 
   my $id;
@@ -323,10 +267,10 @@ sub _getVisitorId {
 }
 
 ################################################################################
-sub _saveVisitorState {
+sub saveVisitorState {
   my $this = shift;
 
-  my $file = _getVisitorFileName($this->{currentVisitor}{wikiName});
+  my $file = getVisitorFileName($this->{currentVisitor}{wikiName});
 
   $this->{currentVisitor}{lastVisit} = time;
 
@@ -339,12 +283,31 @@ sub _saveVisitorState {
 }
 
 ################################################################################
-sub _writeDebug {
+sub queueRecord {
+  my ($this, $record) = @_;
+
+  my $file = File::Temp->new(
+    UNLINK => 0,
+    DIR => $this->{queueDir},
+    SUFFIX => '.txt',
+  );
+
+  writeDebug("record at '$file'");
+
+  while (my ($key, $val) = each %$record) {
+    print $file "$key=$val\n" or die "Can't write to file '$file'";
+  }
+
+  close($file);
+}
+
+################################################################################
+sub writeDebug {
   print STDERR "PiwikPlugin::Tracker - $_[0]\n" if $Foswiki::cfg{PiwikPlugin}{Debug};
 }
 
 ################################################################################
-sub _getTopicTitle {
+sub getTopicTitle {
   my ($web, $topic) = @_;
 
   my $topicTitle;
