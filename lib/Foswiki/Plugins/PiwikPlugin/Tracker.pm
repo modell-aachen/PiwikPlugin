@@ -79,7 +79,8 @@ sub init {
   if ($Foswiki::cfg{PiwikPlugin}{TokenAuth}) {
     $this->{params}{token_auth} = $Foswiki::cfg{PiwikPlugin}{TokenAuth};
     $this->{params}{cip} = $this->{currentVisitor}{remoteAddr};
-  };
+    $this->{params}{cdt} = urlEncode(Foswiki::Time::formatTime(time(), '$year-$mo-$day $hours:$minutes:$seconds'));
+  }
  
   $this->saveVisitorState;
 
@@ -327,6 +328,15 @@ sub getTopicTitle {
   }
 
   return $topic;
+}
+
+################################################################################
+sub urlEncode {
+  my $text = shift;
+
+  $text =~ s/([^0-9a-zA-Z-_.:~!*'\/])/'%'.sprintf('%02x',ord($1))/ge;
+
+  return $text;
 }
 
 

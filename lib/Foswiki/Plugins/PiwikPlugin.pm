@@ -26,7 +26,6 @@ our $RELEASE = '15 Jul 2013';
 our $SHORTDESCRIPTION = 'Server-side page tracking using Piwik';
 our $NO_PREFS_IN_TOPIC = 1;
 our $tracker;
-our $action;
 
 sub tracker {
 
@@ -39,17 +38,13 @@ sub tracker {
 }
 
 sub initPlugin {
-  my ($topic, $web, $user) = @_;
 
-  my $request = Foswiki::Func::getCgiQuery();
-  $action = $request->action;
-
-  tracker->init if $action eq 'view';
+  tracker->init;
 
   return 1;
 }
 
-sub finishPlugin {
+sub completePageHandler {
 
   try {
     # set all custom variables

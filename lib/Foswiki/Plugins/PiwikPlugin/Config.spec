@@ -10,6 +10,10 @@ $Foswiki::cfg{PiwikPlugin}{Debug} = 0;
 # Endpoint of the Piwik Tracker's REST api
 $Foswiki::cfg{PiwikPlugin}{ApiUrl} = "http://localhost/piwik/piwik.php";
 
+# **STRING**
+# Authentication token talking to the piwik instance. See under API in the top menu.
+$Foswiki::cfg{PiwikPlugin}{TokenAuth} = '';
+
 # **NUMBER**
 # The site id. Look up the trackring code for "idsite".
 $Foswiki::cfg{PiwikPlugin}{SiteId} = 1;
