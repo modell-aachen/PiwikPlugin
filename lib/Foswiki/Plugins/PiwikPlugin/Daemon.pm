@@ -27,7 +27,7 @@ use Time::HiRes ();
 #use Data::Dumper ();
 
 use constant DRY => 0; # toggle me
-use constant PROFILE => 1; # toggle me
+use constant PROFILE => 0; # toggle me
 
 ################################################################################
 sub new {
@@ -122,14 +122,14 @@ sub processFile {
   my ($this, $path) = @_;
 
   return unless -f $path;
-  $this->writeDebug("processing file $path");
+  #$this->writeDebug("processing file $path");
 
   my $response = $this->sendRequest($this->readRecord($path));
 
   return unless ref($response);
 
   if (!$response->is_error) {
-    $this->writeLog("deleting record");
+    $this->writeDebug("deleting record");
     unlink $path unless DRY;
   }
 }
@@ -142,13 +142,17 @@ sub readRecord {
   open( $IN_FILE, '<', $path ) || die "Can't read record from '$path'";
 
   my %record = ();
+  my $found = 0;
   while(<$IN_FILE>) {
     if (/^(.*?)=(.*)$/) {
+      $found = 1;
       $record{$1} = $2;
     }
   }
 
   close($IN_FILE);
+
+  return unless $found;
 
   return \%record;
 }
@@ -158,7 +162,7 @@ sub sendRequest {
   my $this = shift;
   my $record = shift;
 
-  #$this->writeDebug(Data::Dumper->Dump([$record]));
+  return unless defined $record;
 
   my $uri = new URI($this->{apiUrl});
   my %queryParams = ($uri->query_form, 
@@ -185,7 +189,7 @@ sub sendRequest {
   if (PROFILE) {
     my $endTime = [Time::HiRes::gettimeofday];
     my $timeDiff = int(Time::HiRes::tv_interval($startTime, $endTime) * 1000);
-    $this->writeDebug("took ".$timeDiff."ms to talk to the backend");
+    $this->writeLog("took ".$timeDiff."ms to talk to the backend");
   }
 
   if (ref($response) && $response->is_error) {
