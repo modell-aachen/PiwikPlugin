@@ -66,9 +66,10 @@ TODO: Let's start this automatically.
 |  Author(s): | Michael Daum|
 |  Copyright: | &copy; 2013 Michael Daum http://michaeldaumconsulting.com |
 |  License: | [[http://www.gnu.org/licenses/gpl.html][GPL (Gnu General Public License)]] |
-|  Release: | %$RELEASE% |
 |  Version: | %$VERSION% |
+|  Release: | %$RELEASE% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  16 Jul 2013 | implemented auto-start feature for the piwik comm server |
 |  15 Jul 2013 | implemented queue manager for better tracking performance; improved control over pages and actions being tracked |
 |  14 Jul 2013 | initial release |
 |  Dependencies: | %$DEPENDENCIES% |
