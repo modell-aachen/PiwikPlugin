@@ -1,4 +1,18 @@
 #!/usr/bin/perl -w
+# Plugin for Foswiki - The Free and Open Source Wiki, http://foswiki.org/
+#
+# PiwikPlugin is Copyright (C) 2013 Michael Daum http://michaeldaumconsulting.com
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details, published at
+# http://www.gnu.org/copyleft/gpl.html
 
 use strict;
 use warnings;
@@ -14,11 +28,232 @@ BEGIN {
 }
 
 use Foswiki::Plugins::PiwikPlugin::Daemon ();
+use Getopt::Long;
+use Pod::Usage;
+use POSIX ();
+
+my $debug = $Foswiki::cfg{PiwikPlugin}{Debug};
+my $detach = 0;
+my $dry = 0;
+my $profile = 0;
+my $quiet = 0;
+my $help = 0;
+my $man = 0;
+my $kill = 0;
+my $restart = 0;
+my $timeout = 10;
+my $apiUrl = $Foswiki::cfg{PiwikPlugin}{ApiUrl};
+my $logFile = ""; # "/var/log/piwik_daemon.log";
+my $pidFile = $Foswiki::cfg{PiwikPlugin}{PidFile};
+my $queueDir = $Foswiki::cfg{PiwikPlugin}{QueueDir};
+
+GetOptions(
+  "help|?" => \$help,
+  "man" => \$man,
+  "debug!" => \$debug,
+  "detach!" => \$detach,
+  "kill" => \$kill,
+  "restart" => \$restart,
+  "dry" => \$dry,
+  "profile" => \$profile,
+  "quiet" => \$quiet,
+  "api=s" => \$apiUrl,
+  "log=s" => \$logFile,
+  "pid=s" => \$pidFile,
+  "queue=s" => \$queueDir,
+  "timeout=i" => \$timeout,
+) or pod2usage(2);
+
+pod2usage(1) if $help;
+pod2usage(-exitval => 0, -verbose => 2) if $man;
+
+sub readFile {
+  my $name = shift;
+
+  my $data = '';
+  my $FILE;
+
+  open($FILE, '<', $name) || die "Can't open file $name";
+
+  local $/ = undef;    # set to read to EOF
+  $data = <$FILE>;
+  close($FILE);
+  $data = '' unless $data;    # no undefined
+
+  return $data;
+}
+
+sub saveFile {
+  my ($name, $text) = @_;
+
+  my $FILE;
+
+  open($FILE, '>', $name) || die "Can't write to file $name: $!";
+  print $FILE $text;
+  close($FILE);
+}
+
+my $pid;
+
+if ($kill) {
+  unless ($pidFile) {
+    print STDERR "ERROR: Can't kill piwik_daemon. No pid file specified.\n";
+    exit 1;
+  }
+
+  unless (-f $pidFile) {
+    print STDERR "ERROR: Can't kill piwik_daemon. Pid file not found.\n";
+    exit 1;
+  }
+
+  $pid = readFile($pidFile);
+  kill 15, $pid if $pid;
+  exit;
+}
+
+if ($restart) {
+  unless ($pidFile) {
+    print STDERR "ERROR: Can't restart piwik_daemon. No pid file specified.\n";
+    exit 1;
+  }
+
+  $pid = readFile($pidFile);
+  kill 15, $pid if $pid;
+  sleep(1);
+}
+
+if ($detach) {
+
+  # test pid
+  if (-f $pidFile) {
+    $pid = readFile($pidFile);
+    if ($pid) {
+      if (kill 0, $pid) {
+        print STDERR "ERROR: piwik_daemon already running at $pid\n";
+        exit 1;
+      }
+    }
+  }
+
+  $pid = fork();
+  if ($pid) {
+    if ($pidFile) {
+      saveFile($pidFile, "$pid\n");
+    } else {
+      print "$pid\n";
+    }
+    exit;
+  }
+
+  POSIX::setsid() || die "Can't start new session $!";
+} else {
+  if ($pidFile) {
+    saveFile($pidFile, "$$\n");
+  }
+}
+
+open(STDIN, '<', '/dev/null') || die "Can't close STDIN: $!";
+if ($logFile) {
+  open(STDOUT, '>>', $logFile) || die "Can't write to logfile '$logFile': $!";
+  open(STDERR, '>&', \*STDOUT) || die "Can't dup STDOUT: $!";
+}
 
 my $server = new Foswiki::Plugins::PiwikPlugin::Daemon(
-  debug => $Foswiki::cfg{PiwikPlugin}{Debug},
-  apiUrl => $Foswiki::cfg{PiwikPlugin}{ApiUrl},
-  queueDir => $Foswiki::cfg{PiwikPlugin}{QueueDir},
+  debug => $debug,
+  apiUrl => $apiUrl,
+  queueDir => $queueDir,
+  quiet => $quiet,
+  dry => $dry,
+  profile => $profile,
+  timeout => $timeout,
 );
 
 $server->run();
+
+__END__
+
+=head1 piwik_daemon
+
+manages a queue of tracked page impressions and communicates them to a Piwik server
+
+=head1 SYNOPSIS
+
+piwik_daemon [options] 
+
+Example:
+
+$ piwik_daemon -detach -pid /var/run/piwik_daemin.pid -log /var/log/piwik_daemon.log
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-api <url>>
+
+Url to the Piwik API, e.g. http://localhost/piwik/piwik.php.
+(default in $Foswiki::cfg{PiwikPlugin}{ApiUrl})
+
+=item B<-debug> / B<-nodebug>
+
+Switch on / off debug messages.
+(default in $Foswiki::cfg{PiwikPlugin}{Debug})
+
+=item B<-detach>
+
+Detach process from terminal and run in background mode. 
+
+=item B<-dry> 
+
+Run in dry mode: it does read files in the queue but does not process them. This is useful
+for testing.
+
+=item B<-help>
+
+Print a brief help message and exits.
+
+=item B<-kill>
+
+Kills a running piwik_daemon and exits.
+
+=item B<-log <file>>
+
+File to log all output to, e.g. /var/log/piwik_daemon.log
+
+=item B<-man>
+
+Prints the manual page and exits.
+
+=item B<-pid <file>>
+
+File to record the id of a detached piwik_daemon process.
+(default in $Foswiki::cfg{PiwikPlugin}{PidFile})
+
+=item B<-profile>
+
+Enable profiling messages testing the connection to the Piwik server.
+
+=item B<-queue <directory>>
+
+Directory to watch for new track records to appear.
+(default in $Foswiki::cfg{PiwikPlugin}{QueueDir})
+
+=item B<-quiet>
+
+Disable any output.
+
+=item B<-restart>
+
+Restarts a running piwik_daemon if it exists and starts a new one.
+
+=time B<-timeout <seconds>>
+
+Timeout for the daemon trying to communicate with the Piwik server.
+(default 10)
+
+=back
+
+=head1 DESCRIPTION
+
+B<piwik_daemon> listens for files being created in a directory, read them and create a HTTP request
+recording a tracked page view to a piwik server
+

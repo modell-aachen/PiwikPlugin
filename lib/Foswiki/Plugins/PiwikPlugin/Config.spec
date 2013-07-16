@@ -56,4 +56,20 @@ $Foswiki::cfg{PiwikPlugin}{TrackedActions} = 'edit,view,save';
 # Regular expression matched against the web.topic being tracked. A matching topic won't be recorded to Piwik.
 $Foswiki::cfg{PiwikPlugin}{ExcludePattern} = '';
 
+# **BOOLEAN**
+# Boolean flag to trigger aut-starting the piwik communication daemon.
+$Foswiki::cfg{PiwikPlugin}{AutoStartDaemon} = 1;
+
+# **COMMAND**
+# Command to start the piwik communication daemon.
+$Foswiki::cfg{PiwikPlugin}{DaemonCmd} = '$Foswiki::cfg{ToolsDir}/piwik_daemon -detach -pid %PIDFILE|F% -log %LOGFILE|F%';
+
+# **PATH**
+# Full path to the pid file holding the process id of the piwik communication daemon currently running.
+$Foswiki::cfg{PiwikPlugin}{PidFile} = '$Foswiki::cfg{WorkingDir}/piwik_daemon.pid';
+
+# **PATH**
+# Fill path to the log file the piwik communication daemon is writing messages to.
+$Foswiki::cfg{PiwikPlugin}{LogFile} = '$Foswiki::cfg{WorkingDir}/logs/piwik_daemon.log';
+
 1;

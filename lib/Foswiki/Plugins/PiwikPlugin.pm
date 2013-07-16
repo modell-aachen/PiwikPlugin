@@ -41,6 +41,62 @@ sub initPlugin {
 
   tracker->init;
 
+  if ($Foswiki::cfg{PiwikPlugin}{AutoStartDaemon}) {
+    require Foswiki::Sandbox;
+
+    my $request = Foswiki::Func::getRequestObject();
+    my $refresh = $request->param('refresh');
+    $refresh = (defined($refresh) && $refresh =~ /^(on|piwik)$/) ? 1 : 0;
+
+    my $pidFile = $Foswiki::cfg{PiwikPlugin}{PidFile};
+    my $logFile = $Foswiki::cfg{PiwikPlugin}{LogFile};
+
+    if ($pidFile && $logFile) {
+
+      if ($Foswiki::cfg{PiwikPlugin}{Debug}) {
+        print STDERR "PiwikPlugin - pidFile=$pidFile\n";
+        print STDERR "PiwikPlugin - logFile=$logFile\n";
+      }
+
+      my $pid;
+
+      $pid = Foswiki::Sandbox::untaint(
+        Foswiki::Func::readFile($pidFile),
+        sub {
+          my $pid = shift;
+          if ($pid =~ /^\s*(\d+)\s*$/) {
+            return $1;
+          }
+        }
+      ) unless $refresh;
+
+      if ($pid && kill 0, $pid) {
+
+        print STDERR "PiwikPlugin - piwik_daemon already running at $pid\n"
+          if $Foswiki::cfg{PiwikPlugin}{Debug};
+
+      } else {
+
+        my $command = $Foswiki::cfg{PiwikPlugin}{DaemonCmd};
+        $command .= " -restart" if $refresh;
+
+        my ($stdout, $exit) = Foswiki::Sandbox->sysCommand(
+          $command,
+          PIDFILE => $pidFile,
+          LOGFILE => $logFile,
+        );
+
+        print STDERR "PiwikPlugin - started piwik_daemon.\n"
+          if $Foswiki::cfg{PiwikPlugin}{Debug};
+
+        print STDERR "PiwikPlugin - stdout: $stdout\n" if $stdout;
+      }
+
+    } else {
+      print STDERR "PiwikPlugin - Can't auto-start piwik_daemin: no {PidFile} or {LogFile}\n";
+    }
+  }
+
   return 1;
 }
 

@@ -26,9 +26,6 @@ use Time::HiRes ();
 
 #use Data::Dumper ();
 
-use constant DRY => 0; # toggle me
-use constant PROFILE => 0; # toggle me
-
 ################################################################################
 sub new {
   my $class = shift;
@@ -69,7 +66,7 @@ sub userAgent {
   unless (defined $this->{userAgent}) {
     $this->{userAgent} = LWP::UserAgent->new(
       agent => "Foswiki Piwik Client",
-      timeout => $this->{timeout} || 2, # make it short
+      timeout => $this->{timeout} || 10, # make it short
     );
   }
 
@@ -96,7 +93,7 @@ sub writeLog {
 sub run {
   my $this = shift;
 
-  $this->writeDebug("### starting $0, PID=$$");
+  $this->writeLog("### starting $0, PID=$$".($this->{dry}?", dry run":""));
 
   # process existing files
   opendir(my $dh, $this->{queueDir}) || die "Can't open queueDir '$this->{queueDir}'";
@@ -129,8 +126,8 @@ sub processFile {
   return unless ref($response);
 
   if (!$response->is_error) {
-    $this->writeDebug("deleting record");
-    unlink $path unless DRY;
+    #$this->writeDebug("deleting $path");
+    unlink $path unless $this->{dry};
   }
 }
 
@@ -145,15 +142,15 @@ sub readRecord {
   my $found = 0;
   while(<$IN_FILE>) {
     if (/^(.*?)=(.*)$/) {
-      $found = 1;
       $record{$1} = $2;
+      $found = 1;
       #print STDERR "$1=$2\n";
     }
   }
-
   close($IN_FILE);
-
   return unless $found;
+
+  $this->writeLog("url=$record{url}, id=".($record{_id}||$record{cid}||'???'));
 
   return \%record;
 }
@@ -173,21 +170,18 @@ sub sendRequest {
 
   $uri->query_form(%queryParams);
 
-  $this->writeDebug("sendRequest: ".$uri);
-  if (DRY) {
-    $this->writeDebug("dry run ... ignoring!!");
-    return;
-  }
+  #$this->writeDebug("sendRequest: ".$uri);
+  return if $this->{dry};
 
   my $startTime;
 
-  if (PROFILE) {
+  if ($this->{profile}) {
     $startTime = [Time::HiRes::gettimeofday];
   }
 
   my $response = $this->userAgent->get($uri);
 
-  if (PROFILE) {
+  if ($this->{profile}) {
     my $endTime = [Time::HiRes::gettimeofday];
     my $timeDiff = int(Time::HiRes::tv_interval($startTime, $endTime) * 1000);
     $this->writeLog("took ".$timeDiff."ms to talk to the backend");
