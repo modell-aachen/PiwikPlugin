@@ -50,14 +50,6 @@ Page impressions aren't recored to the Piwik server directly for performance rea
 configuration setting. Foswiki itself will write to that directory while the interim =piwik_daemon= has to be started which takes over responsibility forwarding
 the records to the actual Piwik server.
 
-Start the =piwik_daemon= with
-
-<verbatim>
-cd <foswik-dir>/tools; ./piwik_daemon >>/var/log/piwik.log 2>&1 &
-</verbatim>
-
-TODO: Let's start this automatically.
-
 ---++ Info
 <!--
    * Set SHORTDESCRIPTION = %$SHORTDESCRIPTION%
