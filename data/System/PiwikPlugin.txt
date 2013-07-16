@@ -1,4 +1,4 @@
-%META:TOPICINFO{author="micha" comment="reprev" date="1373824365" format="1.1" reprev="2" version="2"}%
+%META:TOPICINFO{author="micha" comment="reprev" date="1373970087" format="1.1" reprev="2" version="3"}%
 ---+!! %TOPIC%
 %SHORTDESCRIPTION%
 
@@ -36,6 +36,7 @@ In short: the bulk of interesting data can be captured server side in a more rel
 To finish installation, you'll have to configure at least:
 
    * the ={ApiUrl}= of your Piwik server, e.g. =http://localhost/piwik/piwik.pgp=
+   * The ={TokenAuth}= to access advanced features (see the API menu on your Piwik server).
    * the ={SiteId}= of your Foswiki server; this is a numeric id of your sites configured in piwik itself
    * the ={QueueDir}= to spool tracked page views while being recorded by Foswiki
 
