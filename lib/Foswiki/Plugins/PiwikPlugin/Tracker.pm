@@ -25,15 +25,13 @@ use JSON();
 use File::Temp ();
 use File::Path qw(make_path);
 
-use constant DRY => 0; # toggle me
-use constant PROFILE => 1; # toggle me
-
 ################################################################################
 sub new {
   my $class = shift;
 
   my $this = bless({
     queueDir => $Foswiki::cfg{PiwikPlugin}{QueueDir},
+    excludePattern => $Foswiki::cfg{PiwikPlugin}{ExcludePattern},
     @_
   }, $class);
 
@@ -42,6 +40,8 @@ sub new {
     make_path($this->{queueDir}) || die "Can't create queueDir '$this->{queueDir}'";
   }
 
+  %{$this->{trackedActions}} = map {$_=>1} split(/\s*,\s*/, $Foswiki::cfg{PiwikPlugin}{TrackedActions} || 'edit,view,save');
+
   return $this;
 }
 
@@ -49,9 +49,10 @@ sub new {
 sub init {
   my $this = shift;
 
+  my $request = Foswiki::Func::getRequestObject;
+
   $this->readVisitorState;
 
-  my $request = Foswiki::Func::getRequestObject;
   my ($hour, $min, $sec) = Foswiki::Time::formatTime(time(), '$hours:$minutes:$seconds') =~ /^(.*):(.*):(.*)$/;
 
   $this->{params} = {
@@ -79,6 +80,7 @@ sub init {
   if ($Foswiki::cfg{PiwikPlugin}{TokenAuth}) {
     $this->{params}{token_auth} = $Foswiki::cfg{PiwikPlugin}{TokenAuth};
     $this->{params}{cip} = $this->{currentVisitor}{remoteAddr};
+    $this->{params}{cid} = $this->{currentVisitor}{id};
     #$this->{params}{cdt} = Foswiki::Time::formatTime(time(), '$year-$mo-$day $hours:$minutes:$seconds');# SMELL: does it need to be ... $day, $hours...?
     #$this->{params}{cdt} = time();
     #print STDERR "cdt=$this->{params}{cdt}\n";
@@ -88,6 +90,31 @@ sub init {
   $this->saveVisitorState;
 
   return $this;
+}
+
+################################################################################
+sub isEnabled {
+  my $this = shift;
+
+  my $request = Foswiki::Func::getRequestObject;
+  my $action = $request->action;
+  unless (defined $this->{trackedActions}{$action}) {
+    writeDebug("action '$action' isn't tracked");
+    return 0;
+  }
+
+  if ($this->{excludePattern}) {
+    my $session = $Foswiki::Plugins::SESSION;
+    my $webTopic = $session->{webName}.'.'.$session->{topicName};
+    $webTopic =~ s/\//./g;
+    
+    if ($webTopic =~ /$this->{excludePattern}/) {
+      writeDebug("topic '$webTopic' isn't tracked");
+      return 0;
+    }
+  }
+
+  return 1;
 }
 
 ################################################################################
@@ -174,7 +201,7 @@ sub setCustomVariable {
 
   $scope = 'visit' unless defined $scope;
 
-  writeDebug("setCustomVariable($id, $name, $value, $scope)");
+  #writeDebug("setCustomVariable($id, $name, $value, $scope)");
 
   die "Parameter id to setCustomVariable should be an integer"
     unless defined $id && $id =~ /^\d+$/;
@@ -222,12 +249,10 @@ sub getVisitorFileName {
 
 ################################################################################
 sub readVisitorState {
-  my ($this, $user) = @_;
+  my ($this, $wikiName) = @_;
 
-  my $wikiName = Foswiki::Func::getWikiName($user);
+  $wikiName ||= Foswiki::Func::getWikiName();
   my $file = getVisitorFileName($wikiName);
-
-  #writeDebug("file=$file");
 
   my %record = ();
   if (-f $file) {
@@ -242,14 +267,16 @@ sub readVisitorState {
 
   my $request = Foswiki::Func::getRequestObject;
 
-  $record{user} = $user || 'guest' unless defined $record{user};
   $record{wikiName} = $wikiName unless defined $record{wikiName};
   $record{remoteAddr} = $request->remoteAddress();
-  $record{id} = getVisitorId($wikiName);
+  $record{id} = substr(getVisitorId($wikiName), 0, 16);
   $record{count}++;
   $record{firstVisit} = time unless defined $record{firstVisit};
 
   $this->{currentVisitor} = \%record;
+
+  writeDebug("file=$file, wikiName=$record{wikiName}, id=$record{id}");
+
 
   return $this;
 }
@@ -266,6 +293,8 @@ sub getVisitorId {
   } else {
     $id = $wikiName;
   }
+
+  #writeDebug("called getVisitorId($wikiName) id=$id");
 
   return Digest::MD5::md5_hex($id);
 }
@@ -296,7 +325,7 @@ sub queueRecord {
     SUFFIX => '.txt',
   );
 
-  writeDebug("record at '$file'");
+  #writeDebug("record at '$file'");
 
   while (my ($key, $val) = each %$record) {
     print $file "$key=$val\n" or die "Can't write to file '$file'";

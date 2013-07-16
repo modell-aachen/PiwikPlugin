@@ -68,6 +68,7 @@ TODO: Let's start this automatically.
 |  Release: | %$RELEASE% |
 |  Version: | %$VERSION% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  15 Jul 2013 | implemented queue manager for better tracking performance; improved control over pages and actions being tracked |
 |  14 Jul 2013 | initial release |
 |  Dependencies: | %$DEPENDENCIES% |
 |  Home page: | Foswiki:Extensions/%TOPIC% |

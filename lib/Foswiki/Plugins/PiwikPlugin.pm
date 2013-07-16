@@ -46,6 +46,8 @@ sub initPlugin {
 
 sub completePageHandler {
 
+  return unless tracker->isEnabled;
+
   try {
     # set all custom variables
     if ($Foswiki::cfg{PiwikPlugin}{CustomVariable}) {

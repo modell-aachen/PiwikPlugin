@@ -46,4 +46,14 @@ $Foswiki::cfg{PiwikPlugin}{CustomVariable} = [
 # This can be directory shared among all virtual hosts when using VirtualHostingContrib.
 $Foswiki::cfg{PiwikPlugin}{QueueDir} = '/tmp/PiwikPlugin/queue';
 
+# **STRING**
+# A comma-separated list of actions to be tracked automatically. Others are ignored and not reported to Piwik.
+# Note that plugins may still call =doTrackPageView()= or =doTrackSiteSearch()= successfuly even though the
+# current script action is blocked here.
+$Foswiki::cfg{PiwikPlugin}{TrackedActions} = 'edit,view,save';
+
+# **STRING**
+# Regular expression matched against the web.topic being tracked. A matching topic won't be recorded to Piwik.
+$Foswiki::cfg{PiwikPlugin}{ExcludePattern} = '';
+
 1;

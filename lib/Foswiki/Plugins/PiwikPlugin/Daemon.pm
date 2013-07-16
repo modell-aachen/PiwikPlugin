@@ -147,6 +147,7 @@ sub readRecord {
     if (/^(.*?)=(.*)$/) {
       $found = 1;
       $record{$1} = $2;
+      #print STDERR "$1=$2\n";
     }
   }
 
