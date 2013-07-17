@@ -63,7 +63,7 @@ sub init {
     url => $request->url(-full=>1, -path=>1, -query=>1),
     urlref => $request->referer || '',
     ua => $request->userAgent || '',
-    lang => $request->header("accept-language"),
+    lang => $request->header("accept-language") || '',
     h => $hour,
     m => $min,
     s => $sec,
