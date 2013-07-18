@@ -57,6 +57,10 @@ $Foswiki::cfg{PiwikPlugin}{TrackedActions} = 'edit,view,save';
 $Foswiki::cfg{PiwikPlugin}{ExcludePattern} = '';
 
 # **BOOLEAN**
+# Boolean flag to trigger tracking of outgoing links and downloads
+$Foswiki::cfg{PiwikPlugin}{TrackOutlinks} = 1;
+
+# **BOOLEAN**
 # Boolean flag to trigger aut-starting the piwik communication daemon.
 $Foswiki::cfg{PiwikPlugin}{AutoStartDaemon} = 1;
 

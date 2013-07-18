@@ -118,6 +118,32 @@ sub isEnabled {
 }
 
 ################################################################################
+sub restTrackAction {
+  my ($this, $session, $subject, $verb, $response) = @_;
+
+  my $request = Foswiki::Func::getRequestObject;
+
+  my $action = $request->param("action");
+  die "action parameter missing" unless defined $action;
+
+  my $url = $request->param("url");
+  die "url parameter missing" unless defined $url;
+
+  return $this->doTrackAction($url, $action);
+}
+
+################################################################################
+sub doTrackAction {
+  my ($this, $url, $action) = @_;
+
+  die "unknown action '$action'" unless $action =~ /^(download|link)$/;
+
+  writeDebug("doTrackAction($url, $action)");
+
+  return $this->queueRecord($this->createActionRecord($url, $action));
+}
+
+################################################################################
 sub doTrackPageView {
   my ($this, $web, $topic) = @_;
 
@@ -153,6 +179,17 @@ sub createSiteSearchRecord {
   $record->{search} = $keyword if defined $keyword;
   $record->{search_cat} = $category if defined $category;
   $record->{search_count} = $countResults if defined $countResults;
+
+  return $record;
+}
+
+################################################################################
+sub createActionRecord {
+  my ($this, $url, $action) = @_;
+
+  my $record = $this->createTrackerRecord;
+  $record->{$action} = $url;
+  $record->{url} = $url;
 
   return $record;
 }

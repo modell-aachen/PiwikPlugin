@@ -44,7 +44,6 @@ sub new {
     $this->writeDebug("using queueDir $this->{queueDir}");
   }
 
-
   return $this;
 }
 
