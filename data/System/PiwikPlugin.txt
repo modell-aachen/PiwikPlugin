@@ -78,6 +78,7 @@ forwarding the records to the actual Piwik server.
 |  Version: | %$VERSION% |
 |  Release: | %$RELEASE% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  01 Nov 2013 | final 2.0 release |
 |  18 Jul 2013 | added tracking of outlinks and downloads |
 |  16 Jul 2013 | added auto-start feature for the piwik comm server |
 |  15 Jul 2013 | implemented queue manager for better tracking performance; improved control over pages and actions being tracked |

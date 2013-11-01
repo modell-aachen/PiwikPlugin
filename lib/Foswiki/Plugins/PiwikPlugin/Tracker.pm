@@ -365,6 +365,8 @@ sub queueRecord {
   #writeDebug("record at '$file'");
 
   while (my ($key, $val) = each %$record) {
+    next unless defined $val;
+    next unless defined $key;
     print $file "$key=$val\n" or die "Can't write to file '$file'";
   }
 

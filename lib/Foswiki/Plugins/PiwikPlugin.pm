@@ -22,8 +22,8 @@ use Foswiki::Func ();
 use Foswiki::Sandbox ();
 use Error qw(:try);
 
-use version; our $VERSION = version->declare("v1.99.4");
-our $RELEASE = '18 Jul 2013';
+our $VERSION = '2.00';
+our $RELEASE = '2.00';
 our $SHORTDESCRIPTION = 'Server-side page tracking using Piwik';
 our $NO_PREFS_IN_TOPIC = 1;
 our $tracker;

@@ -3,5 +3,9 @@ lib/Foswiki/Plugins/PiwikPlugin/Config.spec 0644
 lib/Foswiki/Plugins/PiwikPlugin/Daemon.pm 0644
 lib/Foswiki/Plugins/PiwikPlugin.pm 0644
 lib/Foswiki/Plugins/PiwikPlugin/Tracker.pm 0644
+pub/System/PiwikPlugin/jquery.piwik.js 0644
+pub/System/PiwikPlugin/jquery.piwik.js.gz 0644
+pub/System/PiwikPlugin/jquery.piwik.uncompressed.js 0644
 pub/System/PiwikPlugin/logo.png 0644
+pub/System/PiwikPlugin/Makefile 0644
 tools/piwik_daemon 0755
