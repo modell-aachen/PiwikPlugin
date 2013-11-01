@@ -1,4 +1,4 @@
-%META:TOPICINFO{author="micha" comment="reprev" date="1373970087" format="1.1" reprev="2" version="3"}%
+%META:TOPICINFO{author="ProjectContributor" comment="reprev" date="1373970087" format="1.1" reprev="2" version="3"}%
 ---+!! %TOPIC%
 %SHORTDESCRIPTION%
 
@@ -87,4 +87,4 @@ forwarding the records to the actual Piwik server.
 |  Home page: | Foswiki:Extensions/%TOPIC% |
 |  Support: | Foswiki:Support/%TOPIC% |
 
-%META:FILEATTACHMENT{name="logo.png" attachment="logo.png" attr="h" comment="" date="1373824358" size="7191" user="micha" version="1"}%
+%META:FILEATTACHMENT{name="logo.png" attachment="logo.png" attr="h" comment="" date="1373824358" size="7191" user="ProjectContributor" version="1"}%
