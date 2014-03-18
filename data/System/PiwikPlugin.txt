@@ -1,4 +1,4 @@
-%META:TOPICINFO{author="ProjectContributor" comment="reprev" date="1373970087" format="1.1" reprev="2" version="3"}%
+%META:TOPICINFO{author="micha" comment="reprev" date="1391770950" format="1.1" reprev="4" version="4"}%
 ---+!! %TOPIC%
 %SHORTDESCRIPTION%
 
@@ -67,17 +67,54 @@ configuration setting. Foswiki itself will write to that directory while the
 interim =piwik_daemon= has to be started which takes over responsibility
 forwarding the records to the actual Piwik server.
 
+---++ Foswiki < 1.2.0
+
+To track rendering times on older Foswikis you need to apply below patch
+
+%TWISTY%
+<verbatim>
+--- a/lib/Foswiki/Request.pm
++++ b/lib/Foswiki/Request.pm
+@@ -37,6 +37,16 @@ use Error    ();
+ use IO::File ();
+ use CGI::Util qw(rearrange);
+
++use Time::HiRes ();
++
++sub getTime {
++    my $this     = shift;
++    my $endTime  = [Time::HiRes::gettimeofday];
++    my $timeDiff = Time::HiRes::tv_interval( $this->{start_time}, $endTime );
++    return $timeDiff;
++}
++
++
+ =begin TML
+
+ ---++ ClassMethod new([$initializer])
+@@ -69,6 +79,7 @@ sub new {
+         remote_user    => undef,
+         secure         => 0,
+         server_port    => undef,
++        start_time     => [Time::HiRes::gettimeofday],
+         uploads        => {},
+         uri            => '',
+     };
+</verbatim>
+%ENDTWISTY%
+
 ---++ Info
 <!--
    * Set SHORTDESCRIPTION = %$SHORTDESCRIPTION%
 -->
 
 |  Author(s): | Michael Daum|
-|  Copyright: | &copy; 2013 Michael Daum http://michaeldaumconsulting.com |
+|  Copyright: | &copy; 2013-2014 Michael Daum http://michaeldaumconsulting.com |
 |  License: | [[http://www.gnu.org/licenses/gpl.html][GPL (Gnu General Public License)]] |
 |  Version: | %$VERSION% |
 |  Release: | %$RELEASE% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  18 Mar 2014 | added support for foswiki engines < 1.2.0 |
 |  01 Nov 2013 | final 2.0 release |
 |  18 Jul 2013 | added tracking of outlinks and downloads |
 |  16 Jul 2013 | added auto-start feature for the piwik comm server |
