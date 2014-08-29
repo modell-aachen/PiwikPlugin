@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#! /usr/bin/env perl
 # Plugin for Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
 # PiwikPlugin is Copyright (C) 2013-2014 Michael Daum http://michaeldaumconsulting.com
@@ -44,7 +44,7 @@ my $kill = 0;
 my $restart = 0;
 my $timeout = 10;
 my $apiUrl = $Foswiki::cfg{PiwikPlugin}{ApiUrl};
-my $logFile = ""; # "/var/log/piwik_daemon.log";
+my $logFile = $Foswiki::cfg{PiwikPlugin}{LogFile};
 my $pidFile = $Foswiki::cfg{PiwikPlugin}{PidFile};
 my $queueDir = $Foswiki::cfg{PiwikPlugin}{QueueDir};
 

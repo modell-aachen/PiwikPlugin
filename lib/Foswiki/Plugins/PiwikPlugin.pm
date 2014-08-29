@@ -22,8 +22,8 @@ use Foswiki::Func ();
 use Foswiki::Sandbox ();
 use Error qw(:try);
 
-our $VERSION = '2.10';
-our $RELEASE = '2.10';
+our $VERSION = '2.20';
+our $RELEASE = '2.20';
 our $SHORTDESCRIPTION = 'Server-side page tracking using Piwik';
 our $NO_PREFS_IN_TOPIC = 1;
 our $tracker;
@@ -44,7 +44,14 @@ sub initPlugin {
   startDaemon() if $Foswiki::cfg{PiwikPlugin}{AutoStartDaemon};
   addToHead() if $Foswiki::cfg{PiwikPlugin}{TrackOutlinks};
 
-  Foswiki::Func::registerRESTHandler('doTrackAction', sub { return tracker->restTrackAction(@_); });
+  Foswiki::Func::registerRESTHandler(
+    'doTrackAction', 
+    sub { return tracker->restTrackAction(@_); },
+    authenticate => 0,
+    validate => 0,
+    http_allow => 'GET,POST',
+  );
+
 
   return 1;
 }

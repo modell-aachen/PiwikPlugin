@@ -1,0 +1,10 @@
+*.gz
+*.swp
+pub/System/PiwikPlugin/jquery.piwik.js
+PiwikPlugin.md5
+PiwikPlugin.sha1
+PiwikPlugin.tgz
+PiwikPlugin.txt
+PiwikPlugin.zip
+PiwikPlugin_installer
+PiwikPlugin_installer.pl

@@ -114,6 +114,7 @@ To track rendering times on older Foswikis you need to apply below patch
 |  Version: | %$VERSION% |
 |  Release: | %$RELEASE% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  29 Aug 2014 | added proper system init scripts; fully specify rest security |
 |  18 Mar 2014 | added support for foswiki engines < 1.2.0 |
 |  01 Nov 2013 | final 2.0 release |
 |  18 Jul 2013 | added tracking of outlinks and downloads |
