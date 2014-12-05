@@ -1,4 +1,4 @@
-%META:TOPICINFO{author="ProjectContributor" comment="reprev" date="1391770950" format="1.1" reprev="4" version="4"}%
+%META:TOPICINFO{author="ProjectContributor" comment="" date="1417783663" format="1.1"  version="1"}%
 ---+!! %TOPIC%
 %SHORTDESCRIPTION%
 
@@ -114,6 +114,7 @@ To track rendering times on older Foswikis you need to apply below patch
 |  Version: | %$VERSION% |
 |  Release: | %$RELEASE% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  05 Dec 2014 | use both either completePageHander or modifyHeaderHandler not to miss a page view |
 |  29 Aug 2014 | added proper system init scripts; fully specify rest security |
 |  18 Mar 2014 | added support for foswiki engines < 1.2.0 |
 |  01 Nov 2013 | final 2.0 release |
@@ -125,4 +126,4 @@ To track rendering times on older Foswikis you need to apply below patch
 |  Home page: | Foswiki:Extensions/%TOPIC% |
 |  Support: | Foswiki:Support/%TOPIC% |
 
-%META:FILEATTACHMENT{name="logo.png" attachment="logo.png" attr="h" comment="" date="1373824358" size="7191" user="ProjectContributor" version="1"}%
+%META:FILEATTACHMENT{name="logo.png" attachment="logo.png" attr="h" comment="" date="1417783663" size="7191" user="ProjectContributor" version="1"}%

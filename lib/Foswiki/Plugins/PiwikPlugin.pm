@@ -22,11 +22,12 @@ use Foswiki::Func ();
 use Foswiki::Sandbox ();
 use Error qw(:try);
 
-our $VERSION = '2.20';
-our $RELEASE = '2.20';
+our $VERSION = '2.21';
+our $RELEASE = '2.21';
 our $SHORTDESCRIPTION = 'Server-side page tracking using Piwik';
 our $NO_PREFS_IN_TOPIC = 1;
 our $tracker;
+our $doneTrackPageView = 0;
 
 sub tracker {
 
@@ -52,6 +53,7 @@ sub initPlugin {
     http_allow => 'GET,POST',
   );
 
+  $doneTrackPageView = 0;
 
   return 1;
 }
@@ -63,6 +65,17 @@ EOS
 }
 
 sub completePageHandler {
+  trackPageView();
+}
+
+sub modifyHeaderHandler {
+  trackPageView();
+}
+
+sub trackPageView {
+
+  return if $doneTrackPageView;
+  $doneTrackPageView = 1;
 
   return unless tracker->isEnabled;
 
