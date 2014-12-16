@@ -1,4 +1,4 @@
-%META:TOPICINFO{author="ProjectContributor" comment="" date="1417783663" format="1.1"  version="1"}%
+%META:TOPICINFO{author="ProjectContributor" comment="" date="1418745265" format="1.1" version="1"}%
 ---+!! %TOPIC%
 %SHORTDESCRIPTION%
 
@@ -48,7 +48,7 @@ produced by <nop>%TOPIC%.
 
 To finish installation, you'll have to configure at least:
 
-   * the ={ApiUrl}= of your Piwik server, e.g. =http://localhost/piwik/piwik.pgp=
+   * the ={ApiUrl}= of your Piwik server, e.g. =http://localhost/piwik/piwik.php=
    * The ={TokenAuth}= to access advanced features (see the API menu on your Piwik server).
    * the ={SiteId}= of your Foswiki server; this is a numeric id of your sites
      configured in piwik itself
@@ -114,6 +114,7 @@ To track rendering times on older Foswikis you need to apply below patch
 |  Version: | %$VERSION% |
 |  Release: | %$RELEASE% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  16 Dec 2014 | ignore ssl certificate problems when contacting piwik on localhost |
 |  05 Dec 2014 | use both either completePageHander or modifyHeaderHandler not to miss a page view |
 |  29 Aug 2014 | added proper system init scripts; fully specify rest security |
 |  18 Mar 2014 | added support for foswiki engines < 1.2.0 |
@@ -126,4 +127,4 @@ To track rendering times on older Foswikis you need to apply below patch
 |  Home page: | Foswiki:Extensions/%TOPIC% |
 |  Support: | Foswiki:Support/%TOPIC% |
 
-%META:FILEATTACHMENT{name="logo.png" attachment="logo.png" attr="h" comment="" date="1417783663" size="7191" user="ProjectContributor" version="1"}%
+%META:FILEATTACHMENT{name="logo.png" attachment="logo.png" attr="h" comment="" date="1418745265" size="7191" user="ProjectContributor" version="1"}%

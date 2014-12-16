@@ -67,6 +67,10 @@ sub userAgent {
       agent => "Foswiki Piwik Client",
       timeout => $this->{timeout} || 10, # make it short
     );
+
+    $this->{userAgent}->ssl_opts(
+      verify_hostname => 0,    # SMELL
+    );
   }
 
   return $this->{userAgent};
