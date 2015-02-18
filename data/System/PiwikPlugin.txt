@@ -1,0 +1,130 @@
+%META:TOPICINFO{author="ProjectContributor" comment="" date="1418745265" format="1.1" version="1"}%
+---+!! %TOPIC%
+%SHORTDESCRIPTION%
+
+%TOC%
+
+<img src="%ATTACHURLPATH%/logo.png" class="foswikiRight" />
+
+This plugin lets you track page views using the [[http://piwik.org][Piwik web analytics]] services.
+
+Piwik is the leading self-Hosted, decentralized, Open Source web Analytics
+Platform, used by 460,000 websites in 150 countries. 
+
+In most cases the !JavaScript API is used on the _client side_ to bring
+Piwik-based web analytics to your site. However browsers tend to block these
+additional third party cookies and services which then results in rather sparse
+data being collected.
+
+Alternatively <nop>%TOPIC% uses the REST api of Piwik to track page views on
+the _server side_. That is, your Foswiki server talks to a Piwik server
+informing it about things going on behind the scene. 
+
+There are a couple of advantages and disadvantages comparing client side vs
+server side page tracking:
+
+   * measurements on the server are more reliable as they don't rely on the
+     client to cooperate with regards to <nop>JavaScript and cookie settings
+   * installing a Foswiki plugin is more standardized compared to injecting
+     additional <nop>JavaScript to your site
+   * page rendering times are captured on the server and propagated to te Piwik
+     analyzer
+   * custom site search tools like [[Foswiki:Extensions/SolrPlugin][SolrPlugin]] 
+     can hook into the tracking process on the server in a reliable way
+   * the Piwik API doesn't have to be exposed to the outside which would
+     normally be the case for the browser to be able to contact it
+   * some measures like screen size and browser plugins can't be recorded on
+     the server 
+   * click overlays don't work without piwik-related <nop>JavaScript being
+     added to the site
+
+In short: the bulk of interesting data can be captured server side in a more
+reliable way while some minor features of Piwik aren't covered yet by data
+produced by <nop>%TOPIC%.
+
+---++ Installation Instructions
+
+%$INSTALL_INSTRUCTIONS%
+
+To finish installation, you'll have to configure at least:
+
+   * the ={ApiUrl}= of your Piwik server, e.g. =http://localhost/piwik/piwik.php=
+   * The ={TokenAuth}= to access advanced features (see the API menu on your Piwik server).
+   * the ={SiteId}= of your Foswiki server; this is a numeric id of your sites
+     configured in piwik itself
+   * the ={QueueDir}= to spool tracked page views while being recorded by Foswiki
+
+Note that you must use different =<nop>SiteIds= in each =VirtualHost.cfg= file
+in case you are using [[Foswiki:Extensions/VirtualHostingContrib]], e.g.
+
+<verbatim>
+$VirtualHost{PiwikPlugin}{SiteId} = 1;
+</verbatim>
+
+Page impressions aren't recored to the Piwik server directly for performance
+reasons. Instead, they are spooled in a queue specified by the ={QueueDir}=
+configuration setting. Foswiki itself will write to that directory while the
+interim =piwik_daemon= has to be started which takes over responsibility
+forwarding the records to the actual Piwik server.
+
+---++ Foswiki < 1.2.0
+
+To track rendering times on older Foswikis you need to apply below patch
+
+%TWISTY%
+<verbatim>
+--- a/lib/Foswiki/Request.pm
++++ b/lib/Foswiki/Request.pm
+@@ -37,6 +37,16 @@ use Error    ();
+ use IO::File ();
+ use CGI::Util qw(rearrange);
+
++use Time::HiRes ();
++
++sub getTime {
++    my $this     = shift;
++    my $endTime  = [Time::HiRes::gettimeofday];
++    my $timeDiff = Time::HiRes::tv_interval( $this->{start_time}, $endTime );
++    return $timeDiff;
++}
++
++
+ =begin TML
+
+ ---++ ClassMethod new([$initializer])
+@@ -69,6 +79,7 @@ sub new {
+         remote_user    => undef,
+         secure         => 0,
+         server_port    => undef,
++        start_time     => [Time::HiRes::gettimeofday],
+         uploads        => {},
+         uri            => '',
+     };
+</verbatim>
+%ENDTWISTY%
+
+---++ Info
+<!--
+   * Set SHORTDESCRIPTION = %$SHORTDESCRIPTION%
+-->
+
+|  Author(s): | Michael Daum|
+|  Copyright: | &copy; 2013-2014 Michael Daum http://michaeldaumconsulting.com |
+|  License: | [[http://www.gnu.org/licenses/gpl.html][GPL (Gnu General Public License)]] |
+|  Version: | %$VERSION% |
+|  Release: | %$RELEASE% |
+|  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  16 Dec 2014 | ignore ssl certificate problems when contacting piwik on localhost |
+|  05 Dec 2014 | use both either completePageHander or modifyHeaderHandler not to miss a page view |
+|  29 Aug 2014 | added proper system init scripts; fully specify rest security |
+|  18 Mar 2014 | added support for foswiki engines < 1.2.0 |
+|  01 Nov 2013 | final 2.0 release |
+|  18 Jul 2013 | added tracking of outlinks and downloads |
+|  16 Jul 2013 | added auto-start feature for the piwik comm server |
+|  15 Jul 2013 | implemented queue manager for better tracking performance; improved control over pages and actions being tracked |
+|  14 Jul 2013 | initial release |
+|  Dependencies: | %$DEPENDENCIES% |
+|  Home page: | Foswiki:Extensions/%TOPIC% |
+|  Support: | Foswiki:Support/%TOPIC% |
+
+%META:FILEATTACHMENT{name="logo.png" attachment="logo.png" attr="h" comment="" date="1418745265" size="7191" user="ProjectContributor" version="1"}%

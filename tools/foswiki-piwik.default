@@ -1,0 +1,2 @@
+FOSWIKI_ROOT=/home/www-data/foswiki/core
+FOSWIKI_PIWIK_LOGS=/var/log/nginx/$NAME.log

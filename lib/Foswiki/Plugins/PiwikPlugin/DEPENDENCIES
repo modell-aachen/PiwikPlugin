@@ -1,0 +1,5 @@
+LWP::UserAgent,>=6.03,cpan,Required.
+Digest::MD5,>=2.33,cpan,Required.
+URI,>=1.59,cpan,Required.
+JSON,>=2.53,cpan,Required.
+Filesys::Notify::Simple,>0,cpan,Required.
